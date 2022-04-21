@@ -35,6 +35,7 @@ GitDaemon () {
 }
 
 CallApi () {
+    git branch -f jenkinsbuild
     curl -sS -X POST \
         -u $JENKINS_USER:$JENKINS_TOKEN \
         $JENKINS_URL/job/$JENKINS_JOB_NAME/build
@@ -42,10 +43,13 @@ CallApi () {
 
 ShowHelp () {
 cat <<EOF
-Use without argument to build a specific job in Jenkins.
+Use without argument to build current branch in a specific Jenkins job.
 Use with -d to start git-deamon only.
 
-You need to set following environment variables before first use.
+Following steps are required to be done before first use.
+
+1. In Jenkins job, set git branch to build to "jenkinsbuild".
+2. Set following environment variables.
     JENKINS_URL: Jenkins URL such as http://example.com:8080
     JENKINS_USER: Jenkins user name
     JENKINS_TOKEN: API token of JENKINS_USER
