@@ -1,8 +1,28 @@
 #!/bin/bash
 
-set -m
+set -o monitor
+set -o nounset
 
 main () {
+    local daemon_only
+    local version="0.1.0"
+    local lupdate="2022-04-21"
+    while test $# -ge 1
+    do
+        case $1 in
+        -d|--daemon-only)
+            daemon_only=1
+            shift
+            ;;
+        -h|-\?|--help)
+            ShowHelp
+            exit 0
+            ;;
+        *)
+            err "invalid argument: $1"
+            ;;
+        esac
+    done
     GitDaemon
     CallApi
 }
@@ -11,12 +31,39 @@ GitDaemon () {
     ps -afW | grep -q 'git-daemon\.exe' && return
     git daemon --export-all --enable=upload-archive \
         --base-path="$PROJECT_DIR" &
+    test "$daemon_only" && exit
 }
 
 CallApi () {
     curl -sS -X POST \
         -u $JENKINS_USER:$JENKINS_TOKEN \
         $JENKINS_URL/job/$JENKINS_JOB_NAME/build
+}
+
+ShowHelp () {
+cat <<EOF
+Use without argument to build a specific job in Jenkins.
+Use with -d to start git-deamon only.
+
+You need to set following environment variables before first use.
+    JENKINS_URL: Jenkins URL such as http://example.com:8080
+    JENKINS_USER: Jenkins user name
+    JENKINS_TOKEN: API token of JENKINS_USER
+    JENKINS_JOB_NAME: Name of the job to build
+    PROJECT_DIR: Directory of source code to build from
+
+version: $version
+lastupdated: $lupdate
+author: johnny-appleseed <liuzhaohui@inspur.com>
+EOF
+}
+
+err () {
+    local msg=${1-"unspecific error"}
+    >&2 printf "error: %s\n" "$1"
+    shift
+    test $# -gt 0 && >&2 printf "%s\n" "$@"
+    exit 1
 }
 
 main "$@"
