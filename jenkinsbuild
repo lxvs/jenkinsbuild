@@ -4,6 +4,17 @@ set -o monitor
 set -o nounset
 
 main () {
+    #
+    # CONFIGURATIONS START
+    #
+    local JENKINS_URL=${JENKINS_URL-}
+    local JENKINS_USER=${JENKINS_USER-}
+    local JENKINS_TOKEN=${JENKINS_TOKEN-}
+    local JENKINS_JOB_NAME=${JENKINS_JOB_NAME-}
+    local PROJECT_DIR=${PROJECT_DIR-'.'}
+    #
+    # CONFIGURATIONS END
+    #
     local daemon_only
     local version="0.1.0"
     local lupdate="2022-04-21"
