@@ -11,7 +11,7 @@ main () {
     local JENKINS_USER=${JENKINS_USER-}
     local JENKINS_TOKEN=${JENKINS_TOKEN-}
     local JENKINS_JOB_NAME=${JENKINS_JOB_NAME-}
-    local PROJECT_DIR=${PROJECT_DIR-'.'}
+    local JENKINS_SRC_DIR=${JENKINS_SRC_DIR-'.'}
     #
     # CONFIGURATIONS END
     #
@@ -41,7 +41,7 @@ main () {
 GitDaemon () {
     ps -afW | grep -q 'git-daemon\.exe' && return
     git daemon --export-all --enable=upload-archive \
-        --base-path="$PROJECT_DIR" &
+        --base-path="$JENKINS_SRC_DIR" &
     test "${daemon_only-}" && exit
 }
 
@@ -65,7 +65,7 @@ Following steps are required to be done before first use.
     JENKINS_USER: Jenkins user name
     JENKINS_TOKEN: API token of JENKINS_USER
     JENKINS_JOB_NAME: Name of the job to build
-    PROJECT_DIR: Directory of source code to build from
+    JENKINS_SRC_DIR: Directory of source code to build from
 
 version: $version
 lastupdated: $lupdate
