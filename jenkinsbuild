@@ -31,7 +31,7 @@ GitDaemon () {
     ps -afW | grep -q 'git-daemon\.exe' && return
     git daemon --export-all --enable=upload-archive \
         --base-path="$PROJECT_DIR" &
-    test "$daemon_only" && exit
+    test "${daemon_only-}" && exit
 }
 
 CallApi () {
