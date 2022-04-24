@@ -17,7 +17,7 @@ main () {
     #
     local daemon_only
     local version="0.1.0"
-    local lupdate="2022-04-21"
+    local lupdate="2022-04-24"
     while test $# -ge 1
     do
         case $1 in
