@@ -16,8 +16,8 @@ main () {
     # CONFIGURATIONS END
     #
     local daemon_only
-    local version="0.1.0"
-    local lupdate="2022-04-24"
+    local version="0.2.0"
+    local lupdate="2022-05-05"
     while test $# -ge 1
     do
         case $1 in
