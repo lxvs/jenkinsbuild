@@ -56,6 +56,12 @@ GitDaemon () {
 }
 
 CallApi () {
+    test "${JENKINS_USER-}" &&
+        test "${JENKINS_TOKEN-}" &&
+        test "${JENKINS_URL-}" &&
+        test "${JENKINS_JOB_NAME-}" ||
+        err "JENKINS_USER, JENKINS_TOKEN, JENKINS_URL, or JENKINS_JOB_NAME undefined" \
+        "Try 'jenkinsbuild --help' for more information."
     git branch -f jenkinsbuild
     curl -sS -X POST \
         -u $JENKINS_USER:$JENKINS_TOKEN \
