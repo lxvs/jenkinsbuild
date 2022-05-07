@@ -25,6 +25,10 @@ main () {
             daemon_only=1
             shift
             ;;
+        -k|--kill-daemon)
+            KillDaemon
+            exit
+            ;;
         -h|-\?|--help)
             ShowHelp
             exit 0
@@ -34,15 +38,21 @@ main () {
             ;;
         esac
     done
-    GitDaemon
+    GitDaemon || return
     CallApi
 }
 
+KillDaemon () {
+    ps -afW | grep -q 'git-daemon\.exe' || return 0
+    taskkill //f //im git-daemon.exe 1>/dev/null
+}
+
 GitDaemon () {
-    ps -afW | grep -q 'git-daemon\.exe' && return
+    KillDaemon || return
     git daemon --export-all --enable=upload-archive \
         --base-path="$JENKINS_SRC_DIR" &
     test "${daemon_only-}" && exit
+    return 0
 }
 
 CallApi () {
@@ -55,7 +65,8 @@ CallApi () {
 ShowHelp () {
 cat <<EOF
 Use without argument to build current branch in a specific Jenkins job.
-Use with -d to start git-deamon only.
+Use with -d (or --daemon-only) to start git-deamon only.
+Use with -k (or --kill-daemon) to kill git-daemon and exit.
 
 Following steps are required to be done before first use.
 
