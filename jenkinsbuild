@@ -15,7 +15,7 @@ main () {
     #
     # CONFIGURATIONS END
     #
-    local daemon_only
+    local daemon_only param data
     local version="0.3.0"
     local lupdate="2022-05-07"
     while test $# -ge 1
@@ -29,6 +29,11 @@ main () {
             KillDaemon
             exit
             ;;
+        -p|--parameter)
+            test $# -lt 2 && err "switch $1 requires a value"
+            printf -v param "%s%s\n" "${param-}" "$2"
+            shift 2
+            ;;
         -h|-\?|--help)
             ShowHelp
             exit 0
@@ -39,6 +44,7 @@ main () {
         esac
     done
     GitDaemon || return
+    FormatParam
     CallApi
 }
 
@@ -55,6 +61,16 @@ GitDaemon () {
     return 0
 }
 
+FormatParam () {
+    local IFS
+    test ! "${param-}" && return
+    printf -v IFS "\n"
+    for p in $param
+    do
+        printf -v data "%s%s " "${data-}" "--data $p"
+    done
+}
+
 CallApi () {
     test "${JENKINS_USER-}" &&
         test "${JENKINS_TOKEN-}" &&
@@ -65,7 +81,8 @@ CallApi () {
     git branch -f jenkinsbuild
     curl -sS -X POST \
         -u $JENKINS_USER:$JENKINS_TOKEN \
-        $JENKINS_URL/job/$JENKINS_JOB_NAME/build
+        $JENKINS_URL/job/$JENKINS_JOB_NAME/buildWithParameters \
+        ${data-}
 }
 
 ShowHelp () {
@@ -73,6 +90,10 @@ cat <<EOF
 Use without argument to build current branch in a specific Jenkins job.
 Use with -d (or --daemon-only) to start git-deamon only.
 Use with -k (or --kill-daemon) to kill git-daemon and exit.
+Use with -p (or --parameter) to specify build parameters. It can be used
+ multiple times to specify more than one parameters. E.g., below command
+ specified 2 parameters.
+ jenkinsbuild -p VAR1=value1 -p VAR2=value2
 
 Following steps are required to be done before first use.
 
