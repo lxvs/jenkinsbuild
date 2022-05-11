@@ -15,9 +15,10 @@ main () {
     #
     # CONFIGURATIONS END
     #
-    local daemon_only param data
+    local daemon_only param data with_param no_with_param
     local version="0.3.0"
     local lupdate="2022-05-07"
+    with_param=${JENKINS_WITH_PARAMETER:-0}
     while test $# -ge 1
     do
         case $1 in
@@ -33,6 +34,16 @@ main () {
             test $# -lt 2 && err "switch $1 requires a value"
             printf -v param "%s%s\n" "${param-}" "$2"
             shift 2
+            ;;
+        -w|--with-parameter)
+            with_param=1
+            no_with_param=0
+            shift
+            ;;
+        -n|--no-with-parameter)
+            no_with_param=1
+            with_param=0
+            shift
             ;;
         -h|-\?|--help)
             ShowHelp
@@ -65,6 +76,9 @@ FormatParam () {
     local IFS
     test ! "${param-}" && return
     printf -v IFS "\n"
+    test "${no_with_param:-0}" -eq 0 ||
+        err "-p or --parameter conflicts with -n or --no-with-parameter"
+    with_param=1
     for p in $param
     do
         printf -v data "%s%s " "${data-}" "--data $p"
@@ -72,16 +86,18 @@ FormatParam () {
 }
 
 CallApi () {
+    local api="build"
     test "${JENKINS_USER-}" &&
         test "${JENKINS_TOKEN-}" &&
         test "${JENKINS_URL-}" &&
         test "${JENKINS_JOB_NAME-}" ||
         err "JENKINS_USER, JENKINS_TOKEN, JENKINS_URL, or JENKINS_JOB_NAME undefined" \
         "Try 'jenkinsbuild --help' for more information."
+    test "$with_param" -eq 0 || api="buildWithParameters"
     git branch -f jenkinsbuild
     curl --silent --show-error --request POST \
         --user $JENKINS_USER:$JENKINS_TOKEN \
-        $JENKINS_URL/job/$JENKINS_JOB_NAME/buildWithParameters \
+        $JENKINS_URL/job/$JENKINS_JOB_NAME/$api \
         ${data-}
 }
 
@@ -90,9 +106,13 @@ cat <<EOF
 Use without argument to build current branch in a specific Jenkins job.
 Use with -d (or --daemon-only) to start git-deamon only.
 Use with -k (or --kill-daemon) to kill git-daemon and exit.
-Use with -p (or --parameter) to specify build parameters. It can be used
- multiple times to specify more than one parameters. E.g., below command
- specified 2 parameters.
+Use with -w (or --with-parameter) for Jenkins jobs having parameters.
+Use with -n (or --no-with-parameter) for Jenkins jobs without parameter.
+ This is the default, but you can set environment variable
+ JENKINS_WITH_PARAMETER to 1 to set --with-parameter as the default.
+Use with -p (or --parameter) to specify build parameters. This implies
+ --with-parameter. It can be used multiple times to specify more
+ than one parameters. E.g., below command specified 2 parameters.
  jenkinsbuild -p VAR1=value1 -p VAR2=value2
 
 Following steps are required to be done before first use.
