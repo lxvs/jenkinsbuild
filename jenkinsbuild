@@ -79,8 +79,8 @@ CallApi () {
         err "JENKINS_USER, JENKINS_TOKEN, JENKINS_URL, or JENKINS_JOB_NAME undefined" \
         "Try 'jenkinsbuild --help' for more information."
     git branch -f jenkinsbuild
-    curl -sS -X POST \
-        -u $JENKINS_USER:$JENKINS_TOKEN \
+    curl --silent --show-error --request POST \
+        --user $JENKINS_USER:$JENKINS_TOKEN \
         $JENKINS_URL/job/$JENKINS_JOB_NAME/buildWithParameters \
         ${data-}
 }
