@@ -47,6 +47,12 @@ main () {
             ;;
         -h|-\?|--help)
             ShowHelp
+            printf "\n"
+            ShowVersion
+            exit 0
+            ;;
+        --version)
+            ShowVersion
             exit 0
             ;;
         *)
@@ -124,7 +130,11 @@ Following steps are required to be done before first use.
     JENKINS_TOKEN: API token of JENKINS_USER
     JENKINS_JOB_NAME: Name of the job to build
     JENKINS_SRC_DIR: Directory of source code to build from
+EOF
+}
 
+ShowVersion () {
+cat <<EOF
 version: $version
 lastupdated: $lupdate
 author: johnny-appleseed <liuzhaohui@inspur.com>
