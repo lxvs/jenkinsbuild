@@ -1,6 +1,8 @@
 @echo off
 setlocal
 
+set job=
+
 pushd "%~dp0"
 
 :input
