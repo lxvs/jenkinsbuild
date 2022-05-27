@@ -21,8 +21,12 @@ if not defined job (
 )
 
 :is_with_param
-if defined JENKINS_WITH_PARAMETER if "%JENKINS_WITH_PARAMETER%" NEQ "0" (
-    set /p "withParam=Does your Jenkins job have parameters (Y/N, leave empty is Y): "
+if defined JENKINS_WITH_PARAMETER (
+    if "%JENKINS_WITH_PARAMETER%" NEQ "0" (
+        set /p "withParam=Does your Jenkins job have parameters (Y/N, leave empty is Y): "
+    ) else (
+        set /p "withParam=Does your Jenkins job have parameters (Y/N, default is N): "
+    )
 ) else (
     set /p "withParam=Does your Jenkins job have parameters (Y/N, default is N): "
 )
