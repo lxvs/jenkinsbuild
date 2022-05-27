@@ -34,7 +34,7 @@ if not defined withParam (
     if defined JENKINS_WITH_PARAMETER (
         set "withParam=%JENKINS_WITH_PARAMETER%"
     ) else (
-        goto is_with_param
+        set "withParam=0"
     )
 ) else (
     if /i "%withParam%" == "y" (
