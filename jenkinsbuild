@@ -45,6 +45,11 @@ main () {
             with_param=0
             shift
             ;;
+        -j|--job|--job-name)
+            test $# -lt 2 && err "switch $1 requires a value"
+            JENKINS_JOB_NAME=$2
+            shift 2
+            ;;
         -h|-\?|--help)
             ShowHelp
             printf "\n"
@@ -110,6 +115,8 @@ CallApi () {
 ShowHelp () {
 cat <<EOF
 Use without argument to build current branch in a specific Jenkins job.
+Use with -j JOB (or --job JOB) to specify Jenkins job name to "JOB" for
+ this build only.
 Use with -d (or --daemon-only) to start git-deamon only.
 Use with -k (or --kill-daemon) to kill git-daemon and exit.
 Use with -w (or --with-parameter) for Jenkins jobs having parameters.
