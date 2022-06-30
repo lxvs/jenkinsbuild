@@ -15,10 +15,11 @@ main () {
     #
     # CONFIGURATIONS END
     #
-    local daemon_only param data with_param no_with_param
+    local daemon_only= param= data=
+    local with_param=${JENKINS_WITH_PARAMETER:-0}
+    local no_with_param=0
     local version="0.5.0"
     local lupdate="2022-06-17"
-    with_param=${JENKINS_WITH_PARAMETER:-0}
     while test $# -ge 1
     do
         case $1 in
@@ -32,7 +33,7 @@ main () {
             ;;
         -p|--parameter)
             test $# -lt 2 && err "switch $1 requires a value"
-            printf -v param "%s%s\n" "${param-}" "$2"
+            printf -v param "%s%s\n" "$param" "$2"
             shift 2
             ;;
         -w|--with-parameter)
@@ -79,29 +80,29 @@ GitDaemon () {
     KillDaemon || return
     git daemon --export-all --enable=upload-archive \
         --base-path="$JENKINS_SRC_DIR" &
-    test "${daemon_only-}" && exit
+    test "$daemon_only" && exit
     return 0
 }
 
 FormatParam () {
     local IFS
-    test ! "${param-}" && return
+    test ! "$param" && return
     printf -v IFS "\n"
-    test "${no_with_param:-0}" -eq 0 ||
+    test "$no_with_param" -eq 0 ||
         err "-p or --parameter conflicts with -n or --no-with-parameter"
     with_param=1
     for p in $param
     do
-        printf -v data "%s%s " "${data-}" "--data $p"
+        printf -v data "%s%s " "$data" "--data $p"
     done
 }
 
 CallApi () {
     local api="build"
-    test "${JENKINS_USER-}" &&
-        test "${JENKINS_TOKEN-}" &&
-        test "${JENKINS_URL-}" &&
-        test "${JENKINS_JOB_NAME-}" ||
+    test "$JENKINS_USER" &&
+        test "$JENKINS_TOKEN" &&
+        test "$JENKINS_URL" &&
+        test "$JENKINS_JOB_NAME" ||
         err "JENKINS_USER, JENKINS_TOKEN, JENKINS_URL, or JENKINS_JOB_NAME undefined" \
         "Try 'jenkinsbuild --help' for more information."
     test "$with_param" -eq 0 || api="buildWithParameters"
@@ -109,7 +110,7 @@ CallApi () {
     curl --silent --show-error --request POST \
         --user $JENKINS_USER:$JENKINS_TOKEN \
         $JENKINS_URL/job/$JENKINS_JOB_NAME/$api \
-        ${data-}
+        $data
 }
 
 ShowHelp () {
