@@ -2,6 +2,7 @@
 
 set -o monitor
 set -o nounset
+set -o noglob
 
 main () {
     #
