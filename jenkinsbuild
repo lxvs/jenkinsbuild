@@ -15,7 +15,7 @@ main () {
     #
     # CONFIGURATIONS END
     #
-    local daemon_only= param= data=
+    local daemon_only= param= data= commitish=
     local with_param=${JENKINS_WITH_PARAMETER:-0}
     local no_with_param=0
     local version="0.5.0"
@@ -62,7 +62,9 @@ main () {
             exit 0
             ;;
         *)
-            err "invalid argument: $1"
+            test "$commitish" && err "invalid argument: $1"
+            commitish=$1
+            shift 1
             ;;
         esac
     done
@@ -106,7 +108,7 @@ CallApi () {
         err "JENKINS_USER, JENKINS_TOKEN, JENKINS_URL, or JENKINS_JOB_NAME undefined" \
         "Try 'jenkinsbuild --help' for more information."
     test "$with_param" -eq 0 || api="buildWithParameters"
-    git branch -f jenkinsbuild
+    git branch -f jenkinsbuild $commitish || return
     curl --silent --show-error --request POST \
         --user $JENKINS_USER:$JENKINS_TOKEN \
         $JENKINS_URL/job/$JENKINS_JOB_NAME/$api \
@@ -114,30 +116,35 @@ CallApi () {
 }
 
 ShowHelp () {
-cat <<EOF
-Use without argument to build current branch in a specific Jenkins job.
-Use with -j JOB (or --job JOB) to specify Jenkins job name to "JOB" for
- this build only.
-Use with -d (or --daemon-only) to start git-deamon only.
-Use with -k (or --kill-daemon) to kill git-daemon and exit.
-Use with -w (or --with-parameter) for Jenkins jobs having parameters.
-Use with -n (or --no-with-parameter) for Jenkins jobs without parameter.
- This is the default, but you can set environment variable
- JENKINS_WITH_PARAMETER to 1 to set --with-parameter as the default.
-Use with -p (or --parameter) to specify build parameters. This implies
- --with-parameter. It can be used multiple times to specify more
- than one parameters. E.g., below command specified 2 parameters.
- jenkinsbuild -p VAR1=value1 -p VAR2=value2
+cat <<\EOF
+usage: jenkinsbuild [<option> ...] [<commitish>]
+
+Build <commitish> in a specific Jenkins job. <commitish>, if not specified,
+is HEAD, i.e. current checked out commit.
+
+options:
+    -j, --job JOB               specify Jenkins job name to `JOB' for this
+                                build only
+    -d, --daemon-only           start git-daemon only
+    -k, --kill-daemon           kill git-daemon and exit
+    -w, --with-parameter        for Jenkins jobs having parameters
+    -n, --no-with-parameter     for Jenkins jobs not having parameters; this
+                                 is the default, but you can set environment
+                                 variable JENKINS_WITH_PARAMETER to 1 to set
+                                 --with-parameter as the default
+    -p, --parameter             specify build parameters; this implies
+                                 --with-parameter; this option can be used
+                                 multiple times to specify more than one
+                                 parameters
 
 Following steps are required to be done before first use.
-
-1. In Jenkins job, set git branch to build to "jenkinsbuild".
-2. Set following environment variables.
-    JENKINS_URL: Jenkins URL such as http://example.com:8080
-    JENKINS_USER: Jenkins user name
-    JENKINS_TOKEN: API token of JENKINS_USER
-    JENKINS_JOB_NAME: Name of the job to build
-    JENKINS_SRC_DIR: Directory of source code to build from
+    1. In the Jenkins job, set git branch to build to `jenkinsbuild'.
+    2. Set following environment variables.
+        JENKINS_URL: Jenkins URL such as `http://example.com:8080'
+        JENKINS_USER: Jenkins user name
+        JENKINS_TOKEN: API token of JENKINS_USER
+        JENKINS_JOB_NAME: Name of job to build when --job is not specified
+        JENKINS_SRC_DIR: Path to the source code directory
 EOF
 }
 
