@@ -80,9 +80,15 @@ KillDaemon () {
 }
 
 GitDaemon () {
+    local toplevel
     KillDaemon || return
+    pushd "$JENKINS_SRC_DIR" 1>/dev/null 2>&1 || return
+    toplevel=$(git rev-parse --show-toplevel) || return
+    pushd "$toplevel" 1>/dev/null 2>&1 || return
     git daemon --export-all --enable=upload-archive \
         --base-path="$JENKINS_SRC_DIR" &
+    popd 1>/dev/null 2>&1 || return
+    popd 1>/dev/null 2>&1 || return
     test "$daemon_only" && exit
     return 0
 }
