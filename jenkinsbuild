@@ -34,7 +34,7 @@ main () {
             ;;
         -p|--parameter)
             test $# -lt 2 && err "switch $1 requires a value"
-            param=$(printf "%s%s\r" "$param" "$2")
+            param=$(printf "%s%s\t" "$param" "$2")
             shift 2
             ;;
         -w|--with-parameter)
@@ -96,7 +96,7 @@ GitDaemon () {
 }
 
 FormatParam () {
-    local IFS=$(printf '\r')
+    local IFS=$(printf '\t')
     test ! "$param" && return
     test "$no_with_param" -eq 0 ||
         err "-p or --parameter conflicts with -n or --no-with-parameter"
