@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -o monitor
 set -o nounset
@@ -34,7 +34,7 @@ main () {
             ;;
         -p|--parameter)
             test $# -lt 2 && err "switch $1 requires a value"
-            printf -v param "%s%s\n" "$param" "$2"
+            param=$(printf "%s%s\r" "$param" "$2")
             shift 2
             ;;
         -w|--with-parameter)
@@ -82,27 +82,28 @@ KillDaemon () {
 GitDaemon () {
     local toplevel
     KillDaemon || return
-    pushd "$JENKINS_SRC_DIR" 1>/dev/null 2>&1 || return
-    toplevel=$(git rev-parse --show-toplevel) || return
-    pushd "$toplevel" 1>/dev/null 2>&1 || return
-    git daemon --export-all --enable=upload-archive \
-        --base-path="$JENKINS_SRC_DIR" &
-    popd 1>/dev/null 2>&1 || return
-    popd 1>/dev/null 2>&1 || return
+    (
+        cd "$JENKINS_SRC_DIR" || return
+        toplevel=$(git rev-parse --show-toplevel) || return
+        (
+            cd "$toplevel" || return
+            git daemon --export-all --enable=upload-archive \
+                --base-path="$JENKINS_SRC_DIR" &
+        )
+    )
     test "$daemon_only" && exit
     return 0
 }
 
 FormatParam () {
-    local IFS
+    local IFS=$(printf '\r')
     test ! "$param" && return
-    printf -v IFS "\n"
     test "$no_with_param" -eq 0 ||
         err "-p or --parameter conflicts with -n or --no-with-parameter"
     with_param=1
     for p in $param
     do
-        printf -v data "%s%s " "$data" "--data $p"
+        data="$data --data $p"
     done
 }
 
@@ -115,10 +116,10 @@ CallApi () {
         err "JENKINS_USER, JENKINS_TOKEN, JENKINS_URL, or JENKINS_JOB_NAME undefined" \
         "Try 'jenkinsbuild --help' for more information."
     test "$with_param" -eq 0 || api="buildWithParameters"
-    git branch -f jenkinsbuild $commitish || return
+    git branch -f jenkinsbuild ${commitish:+"$commitish"} || return
     curl --silent --show-error --request POST \
-        --user $JENKINS_USER:$JENKINS_TOKEN \
-        $JENKINS_URL/job/$JENKINS_JOB_NAME/$api \
+        --user "$JENKINS_USER:$JENKINS_TOKEN" \
+        "$JENKINS_URL/job/$JENKINS_JOB_NAME/$api" \
         $data
 }
 
@@ -164,7 +165,6 @@ EOF
 }
 
 err () {
-    local msg=${1-"unspecific error"}
     >&2 printf "error: %s\n" "$1"
     shift
     test $# -gt 0 && >&2 printf "%s\n" "$@"
