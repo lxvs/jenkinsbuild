@@ -124,14 +124,14 @@ CallApi () {
 }
 
 ShowHelp () {
-cat <<\EOF
+cat <<EOF
 usage: jenkinsbuild [<option> ...] [<commitish>]
 
 Build <commitish> in a specific Jenkins job. <commitish>, if not specified,
 is HEAD, i.e. current checked out commit.
 
 options:
-    -j, --job JOB               specify Jenkins job name to `JOB' for this
+    -j, --job JOB               specify Jenkins job name to \`JOB' for this
                                 build only
     -d, --daemon-only           start git-daemon only
     -k, --kill-daemon           kill git-daemon and exit
@@ -146,9 +146,9 @@ options:
                                  parameters
 
 Following steps are required to be done before first use.
-    1. In the Jenkins job, set git branch to build to `jenkinsbuild'.
+    1. In the Jenkins job, set git branch to build to \`jenkinsbuild'.
     2. Set following environment variables.
-        JENKINS_URL: Jenkins URL such as `http://example.com:8080'
+        JENKINS_URL: Jenkins URL such as \`http://example.com:8080'
         JENKINS_USER: Jenkins user name
         JENKINS_TOKEN: API token of JENKINS_USER
         JENKINS_JOB_NAME: Name of job to build when --job is not specified
