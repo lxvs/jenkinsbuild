@@ -62,6 +62,9 @@ main () {
             ShowVersion
             exit 0
             ;;
+        -*)
+            err "invalid switch \`$1'"
+            ;;
         *)
             test "$commitish" && err "invalid argument: $1"
             commitish=$1
