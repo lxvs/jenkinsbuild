@@ -77,20 +77,42 @@ main () {
     CallApi
 }
 
+DaemonExists () {
+    ps -afW | grep -q 'git-daemon\.exe'
+}
+
 KillDaemon () {
-    ps -afW | grep -q 'git-daemon\.exe' || return 0
+    git config --global --unset jenkinsbuild.srcdir
+    DaemonExists || return 0
     taskkill //f //im git-daemon.exe 1>/dev/null
 }
 
 GitDaemon () {
-    local toplevel
-    KillDaemon || return
+    local toplevel cursrcdir dexists=
+    DaemonExists && dexists=1
     (
         cd "$JENKINS_SRC_DIR" || return
         toplevel=$(git rev-parse --show-toplevel) || return
         (
             cd "$toplevel" || return
-            git daemon --export-all --enable=upload-archive \
+            if cursrcdir=$(git config --global --get jenkinsbuild.srcdir)
+            then
+                if ! test "$(cygpath -u "$cursrcdir")" = "$(cygpath -u "$PWD")"
+                then
+                    KillDaemon || return
+                    dexists=
+                fi
+            else
+                if test "$dexists"
+                then
+                    KillDaemon || return
+                    dexists=
+                fi
+            fi
+            git config --global jenkinsbuild.srcdir "$PWD"
+            test "$dexists" || git daemon \
+                --export-all \
+                --enable=upload-archive \
                 --base-path="$JENKINS_SRC_DIR" &
         )
     )
