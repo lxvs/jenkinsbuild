@@ -19,8 +19,8 @@ main () {
     local daemon_only= param= data= commitish=
     local with_param=${JENKINS_WITH_PARAMETER:-0}
     local no_with_param=0
-    local version="0.8.0"
-    local lupdate="2022-09-23"
+    local version="0.9.0"
+    local lupdate="2022-11-15"
     while test $# -ge 1
     do
         case $1 in
@@ -183,9 +183,10 @@ EOF
 
 ShowVersion () {
 cat <<EOF
-version: $version
-lastupdated: $lupdate
-author: johnny-appleseed <liuzhaohui@inspur.com>
+Version: $version
+Last Updated: $lupdate
+Author: Liu, Zhao-hui <liuzhaohui@inspur.com>
+https://gitlab.com/lzhh/jenkinsbuild
 EOF
 }
 
