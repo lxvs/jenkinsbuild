@@ -95,21 +95,25 @@ GitDaemon () {
         toplevel=$(git rev-parse --show-toplevel) || return
         (
             cd "$toplevel" || return
-            if cursrcdir=$(git config --global --get jenkinsbuild.srcdir)
+            if ! type cygpath >/dev/null 2>&1
             then
-                if ! test "$(cygpath -u "$cursrcdir")" = "$(cygpath -u "$PWD")"
-                then
-                    KillDaemon || return
-                    dexists=
-                fi
+                KillDaemon || return
+                dexists=
             else
-                if test "$dexists"
+                if cursrcdir=$(git config --global --get jenkinsbuild.srcdir)
+                then
+                    if ! test "$(cygpath -u "$cursrcdir")" = "$(cygpath -u "$PWD")"
+                    then
+                        KillDaemon || return
+                        dexists=
+                    fi
+                elif test "$dexists"
                 then
                     KillDaemon || return
                     dexists=
                 fi
+                git config --global jenkinsbuild.srcdir "$PWD"
             fi
-            git config --global jenkinsbuild.srcdir "$PWD"
             test "$dexists" || git daemon \
                 --export-all \
                 --enable=upload-archive \
