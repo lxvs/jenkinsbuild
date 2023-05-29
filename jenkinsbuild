@@ -168,7 +168,7 @@ is HEAD, i.e. current checked out commit.
 
 options:
     -j, --job JOB               specify Jenkins job name to \`JOB' for this
-                                build only
+                                 build only
     -d, --daemon-only           start git-daemon only
     -k, --kill-daemon           kill git-daemon and exit
     -w, --with-parameter        for Jenkins jobs having parameters
