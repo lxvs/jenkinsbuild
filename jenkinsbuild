@@ -21,6 +21,7 @@ main () {
     local no_with_param=0
     local version="0.9.1"
     local lupdate="2022-12-15"
+    ReadJobNameFromGitConfig
     while test $# -ge 1
     do
         case $1 in
@@ -75,6 +76,12 @@ main () {
     GitDaemon || return
     FormatParam
     CallApi
+}
+
+ReadJobNameFromGitConfig () {
+    local jobname
+    jobname=$(git config --local --get jenkinsbuild.job) || return
+    JENKINS_JOB_NAME=$jobname
 }
 
 DaemonExists () {
@@ -182,6 +189,9 @@ Following steps are required to be done before first use.
         JENKINS_TOKEN: API token of JENKINS_USER
         JENKINS_JOB_NAME: Name of job to build when --job is not specified
         JENKINS_SRC_DIR: Path to the source code directory
+
+Git local config \`jenkinsbuild.job', if defined, overrides environment variable
+JENKINS_JOB_NAME, but would be overridden by switch -j/--job, if specified.
 EOF
 }
 
