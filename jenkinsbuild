@@ -144,7 +144,7 @@ FormatParam () {
 }
 
 CallApi () {
-    local api="build"
+    local api="build" commitish_parsed
     test "$JENKINS_USER" &&
         test "$JENKINS_TOKEN" &&
         test "$JENKINS_URL" &&
@@ -152,10 +152,12 @@ CallApi () {
         err "JENKINS_USER, JENKINS_TOKEN, JENKINS_URL, or JENKINS_JOB_NAME undefined" \
         "Try 'jenkinsbuild --help' for more information."
     test "$with_param" -eq 0 || api="buildWithParameters"
-    git branch -f jenkinsbuild ${commitish:+"$commitish"} || return
+    commitish_parsed=$(git rev-parse --verify "${commitish:-HEAD}") ||
+        err "failed to parse commitish \`$commitish'"
     curl --silent --show-error --request POST \
         --user "$JENKINS_USER:$JENKINS_TOKEN" \
         "$JENKINS_URL/job/$JENKINS_JOB_NAME/$api" \
+        --data commitish="$commitish_parsed" \
         $data
 }
 
