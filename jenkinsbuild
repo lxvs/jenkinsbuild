@@ -126,7 +126,7 @@ GitDaemon () {
                 --enable=upload-archive \
                 --base-path="$JENKINS_SRC_DIR" &
         )
-    )
+    ) || return
     test "$daemon_only" && exit
     return 0
 }
