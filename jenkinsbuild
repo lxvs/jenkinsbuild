@@ -16,7 +16,7 @@ main () {
     #
     # CONFIGURATIONS END
     #
-    local daemon_only= param= data= commitish=
+    local daemon_only= param= data= commitish= jobswitch=
     local with_param=${JENKINS_WITH_PARAMETER:-0}
     local no_with_param=0
     local version="0.11.0"
@@ -49,6 +49,7 @@ main () {
             ;;
         -j|--job|--job-name)
             test $# -lt 2 && err "switch $1 requires a value"
+            jobswitch=1
             JENKINS_JOB_NAME=$2
             shift 2
             ;;
@@ -80,6 +81,7 @@ main () {
 
 ReadJobNameFromGitConfig () {
     local jobname
+    test "${jobswitch-}" && return
     jobname=$(git config --local --get jenkinsbuild.job) || return
     JENKINS_JOB_NAME=$jobname
 }
