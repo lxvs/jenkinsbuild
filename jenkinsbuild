@@ -176,7 +176,7 @@ EOF
 ShowVersion () {
 cat <<EOF
 jenkinsbuild $version : $lupdate : Liu, Zhao-hui <liuzhaohui@ieisystem.com>
-https://gitlab.com/lzhh/jenkinsbuild
+https://github.com/lxvs/jenkinsbuild
 EOF
 }
 
