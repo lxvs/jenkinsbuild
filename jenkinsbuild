@@ -91,46 +91,40 @@ DaemonExists () {
 }
 
 KillDaemon () {
-    git config --global --unset jenkinsbuild.srcdir
+    git config --global --unset jenkinsbuild.lastDaemonDir
+    git config --global --unset jenkinsbuild.lastDaemonShellPid
     DaemonExists || return 0
     taskkill //f //im git-daemon.exe 1>/dev/null
 }
 
 GitDaemon () {
-    local toplevel cursrcdir dexists=
-    DaemonExists && dexists=1
+    local toplevel last_daemon_dir last_daemon_shell_pid
     (
         cd "$JENKINS_SRC_DIR" || return
         toplevel=$(git rev-parse --show-toplevel) || return
         (
             cd "$toplevel" || return
-            if ! type cygpath >/dev/null 2>&1
-            then
-                KillDaemon || return
-                dexists=
-            else
-                if cursrcdir=$(git config --global --get jenkinsbuild.srcdir)
-                then
-                    if ! test "$(cygpath -u "$cursrcdir")" = "$(cygpath -u "$PWD")"
-                    then
-                        KillDaemon || return
-                        dexists=
-                    fi
-                elif test "$dexists"
-                then
-                    KillDaemon || return
-                    dexists=
-                fi
-                git config --global jenkinsbuild.srcdir "$PWD"
-            fi
-            test "$dexists" || git daemon \
-                --export-all \
-                --enable=upload-archive \
-                --base-path="$JENKINS_SRC_DIR" &
+            type cygpath >/dev/null 2>&1 &&
+                last_daemon_dir=$(git config --global --get jenkinsbuild.lastDaemonDir) &&
+                last_daemon_shell_pid=$(git config --global --get jenkinsbuild.lastDaemonShellPid) &&
+                test "$(cygpath -u "$last_daemon_dir")" = "$(cygpath -u "$PWD")" &&
+                test "$last_daemon_shell_pid" = "$PPID" &&
+                return
+            KillDaemon || return
+            GitDaemonStart
         )
     ) || return
     test "$daemon_only" && exit
     return 0
+}
+
+GitDaemonStart () {
+    git config --global jenkinsbuild.lastDaemonDir "$PWD"
+    git config --global jenkinsbuild.lastDaemonShellPid "$PPID"
+    git daemon \
+        --export-all \
+        --enable=upload-archive \
+        --base-path="$JENKINS_SRC_DIR" &
 }
 
 FormatParam () {
