@@ -19,8 +19,8 @@ main () {
     local daemon_only= param= data= commitish= jobswitch=
     local with_param=${JENKINS_WITH_PARAMETER:-0}
     local no_with_param=0
-    local version="0.11.1"
-    local lupdate="2023-07-28"
+    local version="0.12.0"
+    local lupdate="2023-09-06"
     while test $# -ge 1
     do
         case $1 in
