@@ -1,0 +1,24 @@
+extends: default
+font:
+  catalog:
+    merge: true
+    Noto Sans SC:
+      normal: NotoSansSC-Regular.ttf
+      bold: NotoSansSC-Bold.ttf
+      italic: NotoSansSC-Bold.ttf
+base:
+  text_align: left
+  font_family: Noto Sans SC
+  font_size: 12
+  line_height_length: 18
+  line_height: $base_line_height_length / 12
+heading:
+  margin_top: $vertical_rhythm * 2
+  margin_bottom: $vertical_rhythm
+admonition:
+  font_color: 707070
+role:
+  address:
+    text_align: right
+    font_size: 10.5
+    line_height_length: 10.5

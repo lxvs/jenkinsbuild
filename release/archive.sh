@@ -27,12 +27,17 @@ archive () {
     ) || return
 }
 
+print_adoc () {
+    ls ../*.adoc 1>/dev/null 2>&1 || return 0
+    asciidoctor-pdf -a scripts=cjk -a pdf-theme=cjk-theme.yml -a pdf-fontsdir=$LOCALAPPDATA\\Microsoft\\Windows\\fonts,$WINDIR\\fonts ../*.adoc -D .
+}
 main () {
     local scriptdir name
     scriptdir=$(cd "$(dirname "$0")" && PWD) || exit
     name=$(basename -- "$(cd "$(git rev-parse --show-toplevel)" && PWD)") || exit
     cd "$scriptdir" || exit
-    archive "$@"
+    archive
+    print_adoc
 }
 
 main "$@"
