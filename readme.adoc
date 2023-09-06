@@ -1,0 +1,61 @@
+= Jenkinsbuild User Manual
+Liu, Zhao-hui <liuzhaohui@ieisystem.com>
+:toc:
+:toc-placement!:
+
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+[.address]
+For jenkinsbuild 0.12.0 +
+此文档更新于 2023 年 9 月 +
+Liu, Zhao-hui <liuzhaohui@ieisystem.com> +
+https://github.com/lxvs/jenkinsbuild[在 GitHub 中查看^]
+
+toc::[]
+
+[#install]
+== 安装与配置
+
+. 双击执行 jenkinsbuild-x.y.z.exe（其中 x.y.z 为版本号）
+. 如果已安装过，会提示已安装并询问操作，输入字母 `O` 升级
+. 提示 *Enter Jenkins job name*，输入个人任务名，按回车键。如果之前已经安装过，可以直接按回车键沿用之前的设置。
+. 提示 *Does your Jenkins job have parameters (Y/N, default is N)*，如果任务带有参数，输入 `Y` ，否则输入 `N` 或直接按回车键。
+. 提示 *Complete* 即为安装完成，参考 <<environment-variables, 环境变量>> 章节配置环境变量、并重启 Shell 后即可开始使用。
+
+TIP: 使用 `jenkinsbuild -—version` 可以检查当前安装的版本。
+
+[#usage]
+== 使用方法
+
+ jenkinsbuild [<options>] [<commit-ish>]
+
+使 Jenkins 在开始指定任务中编译 `<commit-ish>` 对应的代码。 `<commit-ish>` 可以为 commit ID、分支名、tag 名等，默认为 `HEAD` 。
+
+NOTE: 编译的代码为当前本地提交（commit）的代码，未提交的改动不参与编译。
+
+=== 可选参数
+
+-j, --job <job>:: 指定此次的任务名。如未指定，从环境变量 `JENKINS_JOB_NAME` 获取。另外，可以使用 `git config --local jenkinsbuild.job <job>` 来指定当前代码库使用的任务名，优先级比 `--job` 低。
+-d, --daemon-only:: 仅开启 git-daemon，不执行 Jenkins 任务。
+-k, --kill-daemon:: 强制关闭已开启的 git-daemon 并退出。
+-w, --with-parameter:: 用于带有参数的 Jenkins 任务。环境变量 `JENKINS_WITH_PARAMETER` 已定义且不为 `0` 时，此为默认。
+-n, --no-with-parameter:: 用于无参数的 Jenkins 任务。环境变量 `JENKINS_WITH_PARAMETER` 未定义或为 `0` 时，此为默认。
+-p, --parameter:: 指定任务参数，可以多次使用以同时指定多个参数。隐含 `--with-parameter` 。
+
+[#environment-variables]
+== 环境变量
+
+Jenkinsbuild 受以下环境变量的影响。
+
+JENKINS_URL:: Jenkins 的 URL，包含协议与端口号（如果需要指定端口号的话），如 `http://192.168.0.1:8080` 。除修改脚本文件外，此环境变量目前是唯一指定 URL 的方式。
+JENKINS_USER:: Jenkins 用户名。此用户至少需要 Overall/Read、Job/Build 和 Job/Read 权限。除修改脚本文件外，此环境变量目前是唯一指定用户名的方式。
+JENKINS_TOKEN:: JENKINS_USER 用户的 API Token。除修改脚本文件外，此环境变量目前是唯一指定 API Token 的方式。
+JENKINS_JOB_NAME:: 当未通过其他任何方式指定任务名时，默认使用的任务名。安装过程中会自动设置此环境变量。还可以通过 `git config --local jenkinsbuild.job <job>` 或命令行参数 `-j <job>` / `--job <job>` 指定任务名。
+JENKINS_SRC_DIR:: 代码路径，默认为当前路径。
+JENKINS_WITH_PARAMETER:: 未定义或值为 `0` 时，表示编译任务是无参数的，否则表示是有参数的。还可以通过命令行参数 `-w`/`--with-parameter` 或 `-n`/`--no-with-parameter` 指定。
