@@ -82,7 +82,7 @@ main () {
 ReadJobNameFromGitConfig () {
     local jobname
     test "${jobswitch-}" && return
-    jobname=$(git config --local --get jenkinsbuild.job) || return
+    jobname=$(git config --local --get jenkinsbuild.job 2>/dev/null) || return
     JENKINS_JOB_NAME=$jobname
 }
 
@@ -101,7 +101,7 @@ GitDaemon () {
     local toplevel last_daemon_dir last_daemon_shell_pid
     (
         cd "$JENKINS_SRC_DIR" || return
-        toplevel=$(git rev-parse --show-toplevel) || return
+        toplevel=$(git rev-parse --show-toplevel 2>/dev/null) || toplevel="."
         (
             cd "$toplevel" || return
             type cygpath >/dev/null 2>&1 &&
@@ -129,6 +129,12 @@ GitDaemonStart () {
 
 FormatParam () {
     local IFS=$(printf '\t')
+    if test "$with_param" -eq 0
+    then
+        test ! "$param" ||
+            >&2 printf "warining: parameters are provided but ignored.\n"
+        return 0
+    fi
     test ! "$param" && return
     test "$no_with_param" -eq 0 ||
         err "-p or --parameter conflicts with -n or --no-with-parameter"
@@ -141,6 +147,7 @@ FormatParam () {
 
 CallApi () {
     local api="build" commitish_parsed
+    local commitish_arg=
     test "$JENKINS_USER" &&
         test "$JENKINS_TOKEN" &&
         test "$JENKINS_URL" &&
@@ -148,12 +155,16 @@ CallApi () {
         err "JENKINS_USER, JENKINS_TOKEN, JENKINS_URL, or JENKINS_JOB_NAME undefined" \
         "Try 'jenkinsbuild --help' for more information."
     test "$with_param" -eq 0 || api="buildWithParameters"
-    commitish_parsed=$(git rev-parse --verify "${commitish:-HEAD}") ||
-        err "failed to parse commitish \`$commitish'"
+    if git rev-parse 2>/dev/null
+    then
+        commitish_parsed=$(git rev-parse --verify "${commitish:-HEAD}") ||
+            err "failed to parse commitish \`$commitish'"
+        commitish_arg="--data commitish=$commitish_parsed"
+    fi
     curl --silent --show-error --request POST \
         --user "$JENKINS_USER:$JENKINS_TOKEN" \
         "$JENKINS_URL/job/$JENKINS_JOB_NAME/$api" \
-        --data commitish="$commitish_parsed" \
+        $commitish_arg \
         $data
 }
 
