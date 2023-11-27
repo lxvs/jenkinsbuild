@@ -124,7 +124,7 @@ GitDaemonStart () {
     git daemon \
         --export-all \
         --enable=upload-archive \
-        --base-path="$JENKINS_SRC_DIR" &
+        --base-path=. &
 }
 
 FormatParam () {
