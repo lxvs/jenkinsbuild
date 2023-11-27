@@ -16,11 +16,12 @@ main () {
     #
     # CONFIGURATIONS END
     #
-    local daemon_only= param= data= commitish= jobswitch=
+    local daemon_only= param= data= commitish=
     local with_param=${JENKINS_WITH_PARAMETER:-0}
     local no_with_param=0
     local version="0.12.0"
     local lupdate="2023-09-06"
+    ReadJobNameFromGitConfig
     while test $# -ge 1
     do
         case $1 in
@@ -49,7 +50,6 @@ main () {
             ;;
         -j|--job|--job-name)
             test $# -lt 2 && err "switch $1 requires a value"
-            jobswitch=1
             JENKINS_JOB_NAME=$2
             shift 2
             ;;
@@ -75,15 +75,18 @@ main () {
     done
     GitDaemon || return
     FormatParam
-    ReadJobNameFromGitConfig
     CallApi
 }
 
 ReadJobNameFromGitConfig () {
-    local jobname
-    test "${jobswitch-}" && return
-    jobname=$(git config --local --get jenkinsbuild.job 2>/dev/null) || return
-    JENKINS_JOB_NAME=$jobname
+    local url user token jobname srcdir withParameter
+    git rev-parse 2>/dev/null || return
+    url=$(git config --local --get jenkinsbuild.url 2>/dev/null) && JENKINS_URL=$url
+    user=$(git config --local --get jenkinsbuild.user 2>/dev/null) && JENKINS_USER=$user
+    token=$(git config --local --get jenkinsbuild.token 2>/dev/null) && JENKINS_TOKEN=$token
+    jobname=$(git config --local --get jenkinsbuild.job 2>/dev/null) && JENKINS_JOB_NAME=$jobname
+    srcdir=$(git config --local --get jenkinsbuild.srcdir 2>/dev/null) && JENKINS_SRC_DIR=$srcdir
+    withParameter=$(git config --local --get jenkinsbuild.withParameter 2>/dev/null) && JENKINS_WITH_PARAMETER=$withParameter
 }
 
 DaemonExists () {
@@ -183,8 +186,9 @@ options:
     -w, --with-parameter        for Jenkins jobs having parameters
     -n, --no-with-parameter     for Jenkins jobs not having parameters; this
                                  is the default, but you can set environment
-                                 variable JENKINS_WITH_PARAMETER to 1 to set
-                                 --with-parameter as the default
+                                 variable JENKINS_WITH_PARAMETER, or git config
+                                 --local jenkinsbuild.withParameter, to 1 to
+                                 set --with-parameter as the default
     -p, --parameter             specify build parameters; this implies
                                  --with-parameter; this option can be used
                                  multiple times to specify more than one
@@ -193,14 +197,20 @@ options:
 Following steps are required to be done before first use.
     1. In the Jenkins job, set git branch to build to \`jenkinsbuild'.
     2. Set following environment variables.
-        JENKINS_URL: Jenkins URL such as \`http://example.com:8080'
-        JENKINS_USER: Jenkins user name
-        JENKINS_TOKEN: API token of JENKINS_USER
-        JENKINS_JOB_NAME: Name of job to build when --job is not specified
-        JENKINS_SRC_DIR: Path to the source code directory
+        JENKINS_URL: Jenkins URL such as \`http://example.com:8080', can also
+                     be defined by \`git config --local jenkinsbuild.url'
+        JENKINS_USER: Jenkins user name, can also be defined by \`git config
+                      --local jenkinsbuild.user'
+        JENKINS_TOKEN: API token of JENKINS_USER, can also be defined by \`git
+                       config --local jenkinsbuild.token'
+        JENKINS_JOB_NAME: Name of job to build when --job is not specified, can
+                          also be defined by \`git config --local
+                          jenkinsbuild.job'
+        JENKINS_SRC_DIR: Path to the source code directory, can also be defined
+                         by \`git config --local jenkinsbuild.srcdir'
 
-Git local config \`jenkinsbuild.job', if defined, overrides environment variable
-JENKINS_JOB_NAME, but would be overridden by switch -j/--job, if specified.
+Git local configurations, if defined, override environment variables, but would
+be overridden by switches specified in command line.
 EOF
 }
 
