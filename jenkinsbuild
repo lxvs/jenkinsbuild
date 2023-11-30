@@ -19,8 +19,8 @@ main () {
     local daemon_only= param= data= commitish=
     local with_param=${JENKINS_WITH_PARAMETER:-0}
     local no_with_param=0
-    local version="0.12.0"
-    local lupdate="2023-09-06"
+    local version="0.13.0"
+    local lupdate="2023-11-30"
     ReadJobNameFromGitConfig
     while test $# -ge 1
     do
