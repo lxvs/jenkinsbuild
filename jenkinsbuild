@@ -16,66 +16,85 @@ main () {
     #
     # CONFIGURATIONS END
     #
-    local daemon_only= param= data= commitish=
+    local daemon_only= commitish=
     local with_param=${JENKINS_WITH_PARAMETER:-0}
     local no_with_param=0
     local version="0.13.0"
     local lupdate="2023-11-30"
+    local want_value=
+    local stop_parsing=
     ReadJobNameFromGitConfig
-    while test $# -ge 1
+    for arg in "$@"
     do
-        case $1 in
-        -d|--daemon-only)
-            daemon_only=1
-            shift
+        case $want_value,$stop_parsing,$arg in
+        ,,-j|,,--job)
+            want_value=$arg
             ;;
-        -k|--kill-daemon)
+        ,,-p|,,--parameter)
+            want_value=$arg
+            ;;
+        ,,-d|,,--daemon-only)
+            daemon_only=1
+            ;;
+        ,,-k|,,--kill-daemon)
             KillDaemon
             exit
             ;;
-        -p|--parameter)
-            test $# -lt 2 && err "switch $1 requires a value"
-            param=$(printf "%s%s\t" "$param" "$2")
-            shift 2
-            ;;
-        -w|--with-parameter)
+        ,,-w|,,--with-parameter)
             with_param=1
             no_with_param=0
-            shift
             ;;
-        -n|--no-with-parameter)
+        ,,-n|,,--no-with-parameter)
             no_with_param=1
-            with_param=0
-            shift
             ;;
-        -j|--job|--job-name)
-            test $# -lt 2 && err "switch $1 requires a value"
-            JENKINS_JOB_NAME=$2
-            shift 2
-            ;;
-        -h|-\?|--help)
+        ,,-h|,,-\?|,,--help)
             ShowHelp
             printf "\n"
             ShowVersion
             exit 0
             ;;
-        --version)
+        ,,--version)
             ShowVersion
             exit 0
             ;;
-        -*)
+        ,,--)
+            stop_parsing=1
+            ;;
+        ,,-*)
             err "invalid switch \`$1'"
             ;;
-        *)
-            test "$commitish" && err "invalid argument: $1"
-            commitish=$1
-            shift 1
+        ,,*)
+            if ! test "$commitish"
+            then
+                commitish=$arg
+            else
+                set -- "$@" "$arg"
+            fi
+            ;;
+        ,*,*)
+            set -- "$@" "$arg"
+            ;;
+        *,*,*)
+            case $want_value in
+            -p|--parameter)
+                set -- "$@" "$arg"
+                ;;
+            -j|--job)
+                JENKINS_JOB_NAME=$arg
+                ;;
+            *)
+                >&2 printf "warning: invalid want_value \`%s'\n" "$arg"
+                ;;
+            esac
+            want_value=
             ;;
         esac
+        shift
     done
+    test ! "$want_value" || err "switch \`$want_value' requires a value"
     GitDaemon || return
-    FormatParam
-    CallApi
+    DetectWithParameter "$@"
+    CallApi "$@"
 }
 
 ReadJobNameFromGitConfig () {
@@ -130,22 +149,14 @@ GitDaemonStart () {
         --base-path=. &
 }
 
-FormatParam () {
-    local IFS=$(printf '\t')
-    if test "$with_param" -eq 0
+DetectWithParameter () {
+    test ! "$*" && return
+    if test ! "$no_with_param" -eq 0
     then
-        test ! "$param" ||
-            >&2 printf "warining: parameters are provided but ignored.\n"
+        >&2 printf "warining: \`--no-with-parameter' present, parameters provided but ignored\n"
         return 0
     fi
-    test ! "$param" && return
-    test "$no_with_param" -eq 0 ||
-        err "-p or --parameter conflicts with -n or --no-with-parameter"
     with_param=1
-    for p in $param
-    do
-        data="$data --data $p"
-    done
 }
 
 CallApi () {
@@ -157,7 +168,15 @@ CallApi () {
         test "$JENKINS_JOB_NAME" ||
         err "JENKINS_USER, JENKINS_TOKEN, JENKINS_URL, or JENKINS_JOB_NAME undefined" \
         "Try 'jenkinsbuild --help' for more information."
-    test "$with_param" -eq 0 || api="buildWithParameters"
+    if ! test "$with_param" -eq 0
+    then
+        api="buildWithParameters"
+        for parameter in "$@"
+        do
+            set -- "$@" "--data" "$parameter"
+            shift
+        done
+    fi
     if git rev-parse 2>/dev/null
     then
         commitish_parsed=$(git rev-parse --verify "${commitish:-HEAD}") ||
@@ -168,12 +187,12 @@ CallApi () {
         --user "$JENKINS_USER:$JENKINS_TOKEN" \
         "$JENKINS_URL/job/$JENKINS_JOB_NAME/$api" \
         $commitish_arg \
-        $data
+        "$@"
 }
 
 ShowHelp () {
 cat <<EOF
-usage: jenkinsbuild [<option> ...] [<commitish>]
+usage: jenkinsbuild [<option> ...] [<commitish>] [--] [<parameter>=<value>...]
 
 Build <commitish> in a specific Jenkins job. <commitish>, if not specified,
 is HEAD, i.e. current checked out commit.

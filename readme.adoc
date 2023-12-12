@@ -33,7 +33,7 @@ TIP: 使用 `jenkinsbuild -—version` 可以检查当前安装的版本。
 [#usage]
 == 使用方法
 
- jenkinsbuild [<options>] [<commit-ish>]
+ jenkinsbuild [<option> ...] [<commit-ish>] [--] [<parameter>=<value> ...]
 
 使 Jenkins 在开始指定任务中编译 `<commit-ish>` 对应的代码。 `<commit-ish>` 可以为 commit ID、分支名、tag 名等，默认为 `HEAD` 。
 
