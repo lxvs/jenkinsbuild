@@ -12,8 +12,8 @@ ifdef::env-github[]
 endif::[]
 
 [.address]
-For jenkinsbuild 0.13.0 +
-此文档更新于 2023 年 9 月 +
+For jenkinsbuild 0.14.0 +
+此文档更新于 2023 年 12 月 +
 Liu, Zhao-hui <liuzhaohui@ieisystem.com> +
 https://github.com/lxvs/jenkinsbuild[在 GitHub 中查看^]
 
