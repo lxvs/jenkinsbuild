@@ -43,9 +43,8 @@ archive () {
 }
 
 print_adoc () {
-    local asciidoctor_pdf="C:/Ruby32-x64/bin/asciidoctor-pdf"
     ls ../*.adoc 1>/dev/null 2>&1 || return 0
-    "$asciidoctor_pdf" -a scripts=cjk \
+    asciidoctor-pdf -a scripts=cjk \
         -a pdf-theme=cjk-theme.yml \
         -a pdf-fontsdir=$LOCALAPPDATA\\Microsoft\\Windows\\fonts,$WINDIR\\fonts \
         ../*.adoc \
