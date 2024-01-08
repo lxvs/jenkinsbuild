@@ -1,4 +1,13 @@
 #!/bin/sh
+
+# To use this, below things needs to be done first.
+#  * Install Ruby
+#  * Install asciidoctor-pdf with `gem install asciidoctor-pdf'
+#  * Install fonts used in theme file
+#  * Install 7-zip, or jai, to its default location
+#  * Install Git 2.36.0 or any later version
+#  * Install jg 2.10.0 or any later version
+
 set -o nounset
 
 archive_cleanup () {
