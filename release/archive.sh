@@ -8,8 +8,21 @@ archive_cleanup () {
 
 archive () {
     local fname
-    local exe7za="C:/Users/$USERNAME/AppData/Local/Programs/jai/7za.exe"
+    local exe7z
+    local exe_from_7zip="C:/Program Files/7-Zip/7z.exe"
+    local exe_from_jai="C:/Users/$USERNAME/AppData/Local/Programs/jai/7za.exe"
     local description toplevel
+    if test -x "$exe_from_7zip"
+    then
+        exe7z=$exe_from_7zip
+    elif test -x "$exe_from_jai"
+    then
+        exe7z=$exe_from_jai
+    else
+        >&2 printf "error: no 7-Zip excutable available\n"
+        return 1
+    fi
+    printf "using %s\n" "$exe7z"
     rm -rf tmp/ || return
     mkdir tmp || return
     trap archive_cleanup INT TERM
@@ -34,9 +47,9 @@ archive () {
         (
             cd .. || return
             tar -zcf "../$fname.tgz" "$fname" || return
-            "$exe7za" a -mx9 "../$fname.7z" "$fname" || return
+            "$exe7z" a -mx9 "../$fname.7z" "$fname" || return
         ) || return
-        "$exe7za" a -mx9 "$name.7z" * || return
+        "$exe7z" a -mx9 "$name.7z" * || return
         cp "../../$name.sfx" . || return
         cmd //c "copy /b $name.sfx + $name.7z $(cygpath -w "../../$(basename $PWD).exe")" || return
     ) || return
